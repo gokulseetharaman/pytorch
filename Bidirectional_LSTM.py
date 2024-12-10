@@ -1,5 +1,3 @@
-
-
 # import
 import torch
 import torch.nn as nn
@@ -14,7 +12,7 @@ import torchvision.transforms as transforms
 device = "cuda"
 
 #hyper parameters
-input_size = 784
+input_size = 28
 sequence_length = 28
 num_layers = 2
 hidden_size = 256
@@ -35,7 +33,7 @@ class BRNN(nn.Module):
         h0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)
         c0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)
 
-        out, _ = self.lstm(x, (h0, c0))
+        out, _ = self.lstm(x)
         out = self.fc(out[:, -1, :])
 
         return out
@@ -44,10 +42,10 @@ class BRNN(nn.Module):
 train_dataset = datasets.MNIST(root='dataset/', train = True, transform=transforms.ToTensor(), download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = datasets.MNIST(root='dataset/', train = False, transform=transforms.ToTensor(), download=True)
-test_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
 #init network
-model = BRNN(input_size=input_size,hidden_size=hidden_size, num_classes=num_classes, num_layers=num_layers).to(device)
+model = BRNN(input_size, hidden_size, num_layers, num_classes).to(device)
 
 #loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -57,7 +55,7 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 for epoch in range(num_epoch):
     for batch_idx, (data, targets) in enumerate(train_loader):
         #get data to cuda
-        data = data.view(data.size(0), sequence_length, input_size).to(device)
+        data = data.to(device=device).squeeze(1)
         targets = targets.to(device=device)
 
         #forward
@@ -77,7 +75,7 @@ def check_accuracy(loader, model):
     if loader.dataset.train:
         print('checking accuracy on training data')
     else:
-        print('checcking accuracy on test data')
+        print('checking accuracy on test data')
 
     num_correct = 0
     num_samples = 0
@@ -85,9 +83,8 @@ def check_accuracy(loader, model):
 
     with torch.no_grad():
         for x,y in loader:
-            x=x.to(device=device)
+            x=x.to(device=device).squeeze(1)
             y = y.to(device=device)
-            x = x.reshape(x.shape[0], -1)
 
             scores = model(x)
             _, predictions = scores.max(1)
