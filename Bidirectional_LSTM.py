@@ -51,6 +51,7 @@ model = BRNN(input_size, hidden_size, num_layers, num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+
 #train
 for epoch in range(num_epoch):
     for batch_idx, (data, targets) in enumerate(train_loader):
