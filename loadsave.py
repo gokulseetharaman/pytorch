@@ -30,6 +30,11 @@ def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
     print('saving checkpoint')
     torch.save(state, filename)
 
+def load_chekpoint(checkpoint):
+    print('loading checkpoint')
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
 #set device
 device = "cuda"
 
@@ -39,6 +44,7 @@ num_classes = 10
 learning_rate = 0.001
 batch_size = 1024
 num_epoch = 10
+load_model = True
 
 
 #load data
@@ -54,12 +60,14 @@ model = CNN(in_channel=in_channels, num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+if load_model:
+    load_chekpoint(torch.load("my_checkpoint.pth.tar"))
 
 #train
 for epoch in range(num_epoch):
     losses = []
 
-    if epoch == 2:
+    if epoch %3 == 0:
         checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
         save_checkpoint(checkpoint)
 
